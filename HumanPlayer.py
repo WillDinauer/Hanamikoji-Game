@@ -11,6 +11,14 @@ class HumanPlayer:
         self.discard = None
         self.side = side
 
+        self.card_table = {0: colored("2", "magenta"),
+                           1: colored("2", "red"),
+                           2: colored("2", "yellow"),
+                           3: colored("3", "blue"),
+                           4: colored("3", "white"),
+                           5: colored("4", "green"),
+                           6: colored("5", "light_cyan")}
+
     # Save one card facedown
     def move0(self, card):
         self.facedown = card
@@ -71,12 +79,13 @@ class HumanPlayer:
 
     def draw(self, card):
         self.hand.append(card)
+        self.hand.sort()
 
     # Pick a move and play it
     def playMove(self, opponent):
         move = -1
         self.printMoves()
-        # TODO: Refactor this loop...automate some of these checks
+        # TODO: Refactor this loop...automate some of these checks...ALSO this won't work with colored card conversion...
         while True:
             move = input("Play a move (ie. a3, b53, c534, d4353) or type 'h' to see the board: ")
             try:
@@ -144,7 +153,15 @@ class HumanPlayer:
         print(colored("b: Pick two cards from your hand to REMOVE from play facedown. They will not score this round.", avail if "b" in self.moves_left else used))
         print(colored("c: Pick three cards from your hand to play face up. Your opponent picks one, and you get the remaining two.", avail if "c" in self.moves_left else used))
         print(colored("d: Pick four cards from your hand to play faceup in two groups of two. Your opponent picks one group, and you receive the remaining two cards.", avail if "d" in self.moves_left else used))
-        print(f"Player hand: {self.hand} | You are Player {self.side+1}")
+        print(f"Player hand: ", end="")
+        self.printHand()
+        print(f" | You are Player{self.side+1}")
+
+    def printHand(self):
+        print("[", end="")
+        for i in range(len(self.hand)-1):
+            print(f"{self.card_table[self.hand[i]]}, ", end="")
+        print(f"{self.card_table[self.hand[-1]]}]", end="")
     
     def resetRound(self):
         self.hand = []

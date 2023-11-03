@@ -69,7 +69,6 @@ class HanamikojiGame:
         p1_ct, p2_ct = 0, 0
         for i in range(7):
             winning = self.board.whosWinning(i)
-            self.board.favor[i] = winning
             if winning == 1:
                 p1_points += self.values[i]
                 p1_ct += 1

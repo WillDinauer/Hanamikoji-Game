@@ -11,14 +11,6 @@ class HumanPlayer:
         self.discard = None
         self.side = side
 
-        self.card_table = {0: colored("2", "magenta"),
-                           1: colored("2", "red"),
-                           2: colored("2", "yellow"),
-                           3: colored("3", "blue"),
-                           4: colored("3", "white"),
-                           5: colored("4", "green"),
-                           6: colored("5", "light_cyan")}
-
     # Save one card facedown
     def move0(self, card):
         self.facedown = card
@@ -46,10 +38,13 @@ class HumanPlayer:
     def move2Response(self, cards):
         print("Opponent picked move 'c'")
         idx = -1
-        while idx not in ["1", "2", "3"]:
-            print(f"Choose a card from {cards}")
-            idx = input(f"Which card do you want (1, 2, 3): ")
-        card = cards.pop(int(idx)-1)
+        while idx not in ["0", "1", "2"]:
+            print(f"Choose a card from [", end="")
+            for i in range(len(cards)-1):
+                print(f"{self.board.card_table[cards[i]]}, ", end="")
+            print(f"{self.board.card_table[cards[-1]]}]")
+            idx = input(f"Which card do you want (0, 1, 2): ")
+        card = cards.pop(int(idx))
         self.board.placeCards([[self.side, card]])
         return cards
                             
@@ -67,10 +62,12 @@ class HumanPlayer:
     def move3Response(self, groups):
         print("Opponent picked move 'd'")
         idx = -1
-        while idx not in ["1", "2"]:
-            print(f"Groups: {groups}")
-            idx = input(f"Pick a group (1 or 2): ")
-        group = groups.pop(int(idx)-1)
+        while idx not in ["0", "1"]:
+            print(f"Groups: ", end="")
+            for group in groups:
+                print(f"[{self.board.card_table[group[0]]}, {self.board.card_table[group[1]]}] ", end="")
+            idx = input(f"\nPick a group (0 or 1): ")
+        group = groups.pop(int(idx))
         publish = []
         for card in group:
             publish.append([self.side, card])
@@ -85,67 +82,70 @@ class HumanPlayer:
     def playMove(self, opponent):
         move = -1
         self.printMoves()
-        # TODO: Refactor this loop...automate some of these checks...ALSO this won't work with colored card conversion...
-        while True:
-            move = input("Play a move (ie. a3, b53, c534, d4353) or type 'h' to see the board: ")
-            try:
-                code = move[0].lower()
-                if code in self.moves_left:
-                    # Copy of hand for validation
-                    hand = self.hand.copy()
-                    if code.lower() == "h":
-                        self.board.printBoard()
-                        print(f"(I am player {self.side + 1})")
-                    elif code == "a":
-                        card = int(move[1])
-                        # Try removing the card from hand...
-                        hand.remove(card)
-                        self.hand.remove(card)
-                        self.move0(card)
-                        return
-                    elif code == "b":
-                        card1 = int(move[1])
-                        hand.remove(card1)
-                        card2 = int(move[2])
-                        hand.remove(card2)
-                        self.hand.remove(card1)
-                        self.hand.remove(card2)
-                        self.move1([card1, card2])
-                        return
-                    elif code == "c":
-                        card1 = int(move[1])
-                        hand.remove(card1)
-                        card2 = int(move[2])
-                        hand.remove(card2)
-                        card3 = int(move[3])
-                        hand.remove(card3)
-                        self.hand.remove(card1)
-                        self.hand.remove(card2)
-                        self.hand.remove(card3)
-                        self.move2(opponent, [card1, card2, card3])
-                        return
-                    elif code == "d":
-                        card1 = int(move[1])
-                        hand.remove(card1)
-                        card2 = int(move[2])
-                        hand.remove(card2)
-                        card3 = int(move[3])
-                        hand.remove(card3)
-                        card4 = int(move[4])
-                        hand.remove(card4)
-                        self.hand.remove(card1)
-                        self.hand.remove(card2)
-                        self.hand.remove(card3)
-                        self.hand.remove(card4)
-                        self.move3(opponent, [[card1, card2], [card3, card4]])
-                        return
-                else:
-                    raise Exception("First character must be a remaining move.")
-            except Exception as e:
-                print(f"An exception occured: {e}")
-                print("Invalid move...try again.")
-                self.printMoves()
 
+        while move != 0:
+            move = input("Play a move in the format [move][index] (i.e. a0, b03, c124, d0356) or 'h' to see the board: ")
+            move = self.handleMove(move, opponent)
+            
+    # Handle the move passed by the human player
+    def handleMove(self, move, opponent):
+        try:
+            code = move[0].lower()
+            if code in self.moves_left:
+                if code.lower() == "h":
+                    self.board.printBoard()
+                    print(f"(I am player {self.side + 1})")
+                elif code == "a":
+                    cards = self.extractCards(move, 1)
+                    self.move0(cards)
+                    return 0
+                elif code == "b":
+                    cards = self.extractCards(move, 2)
+                    self.move1(cards)
+                    return 0
+                elif code == "c":
+                    cards = self.extractCards(move, 3)
+                    self.move2(opponent, cards)
+                    return 0
+                elif code == "d":
+                    cards = self.extractCards(move, 4)
+                    self.move3(opponent, [[cards[0], cards[1]], [cards[2], cards[3]]])
+                    return 0
+            else:
+                raise Exception("First character must be a remaining move.")
+        except Exception as e:
+            print(f"An exception occured: {e}")
+            self.printMoves()
+            return 1
+
+    # Given a move, return the cards as an array and remove them from the hand
+    def extractCards(self, move, length):
+        if len(move)-1 != length:
+            raise Exception("Invalid move format")
+        indices = []
+        for i in range(1, length+1):
+            indices.append(int(move[i]))
+    
+        if self.validateIndices(indices):
+            cards = []
+            for idx in indices:
+                cards.append(self.hand[idx])
+            for card in cards:
+                self.hand.remove(card)
+            return cards
+        raise Exception("Invalid indices")
+
+    # Validate the indices given by the player...each index must be a position in the hand.
+    # Also ensure there are no duplicate indices given.
+    def validateIndices(self, indices):
+        seen = []
+        for idx in indices:
+            if idx >= len(self.hand) or idx in seen:
+                return False
+            seen.append(idx)
+        return True
+    
+    # Helper function with colored move descriptions
     def printMoves(self):
         avail = 'green'
         used = 'red'
@@ -160,8 +160,8 @@ class HumanPlayer:
     def printHand(self):
         print("[", end="")
         for i in range(len(self.hand)-1):
-            print(f"{self.card_table[self.hand[i]]}, ", end="")
-        print(f"{self.card_table[self.hand[-1]]}]", end="")
+            print(f"{self.board.card_table[self.hand[i]]}, ", end="")
+        print(f"{self.board.card_table[self.hand[-1]]}]", end="")
     
     def resetRound(self):
         self.hand = []

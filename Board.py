@@ -6,6 +6,13 @@ class Board:
         self.player1_side = [0 for i in range(7)]
         self.player2_side = [0 for i in range(7)]
         self.favor = [0 for i in range(7)]
+        self.card_table = {0: colored("2", "magenta"),
+                           1: colored("2", "red"),
+                           2: colored("2", "yellow"),
+                           3: colored("3", "blue"),
+                           4: colored("3", "white"),
+                           5: colored("4", "green"),
+                           6: colored("5", "light_cyan")}
 
     # Place cards on the board.
     # arr is an array containing [player, card] pairs
@@ -44,7 +51,7 @@ class Board:
         print(f"|  {self.player1_side[0]}  |  {self.player1_side[1]}  |  {self.player1_side[2]}  |  {self.player1_side[3]}  |  {self.player1_side[4]}  |  {self.player1_side[5]}  |  {self.player1_side[6]}  |  <- Player 1")
         print(f"| - - - - - - - - - - - - - - - - - - - - |")
         print(f"|  {'+' if self.favor[0] == 1 else ' '}  |  {'+' if self.favor[1] == 1 else ' '}  |  {'+' if self.favor[2] == 1 else ' '}  |  {'+' if self.favor[3] == 1 else ' '}  |  {'+' if self.favor[4] == 1 else ' '}  |  {'+' if self.favor[5] == 1 else ' '}  |  {'+' if self.favor[6] == 1 else ' '}  |")
-        print(f"| {colored('(2)', 'magenta')} | {colored('(2)', 'red')} | {colored('(2)', 'yellow')} | {colored('(3)', 'blue')} | {colored('(3)', 'white')} | {colored('(4)', 'green')} | {colored('(5)', 'light_cyan')} |")
+        print(f"| ({self.card_table[0]}) | ({self.card_table[1]}) | ({self.card_table[2]}) | ({self.card_table[3]}) | ({self.card_table[4]}) | ({self.card_table[5]}) | ({self.card_table[6]}) |")
         print(f"|  {'+' if self.favor[0] == -1 else ' '}  |  {'+' if self.favor[1] == -1 else ' '}  |  {'+' if self.favor[2] == -1 else ' '}  |  {'+' if self.favor[3] == -1 else ' '}  |  {'+' if self.favor[4] == -1 else ' '}  |  {'+' if self.favor[5] == -1 else ' '}  |  {'+' if self.favor[6] == -1 else ' '}  |")
         print(f"| - - - - - - - - - - - - - - - - - - - - |")
         print(f"|  {self.player2_side[0]}  |  {self.player2_side[1]}  |  {self.player2_side[2]}  |  {self.player2_side[3]}  |  {self.player2_side[4]}  |  {self.player2_side[5]}  |  {self.player2_side[6]}  |  <- Player 2")

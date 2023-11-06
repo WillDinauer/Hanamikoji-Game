@@ -62,8 +62,7 @@ class HanamikojiGame:
         # Has anyone won yet?
         return self.checkWinner()
     
-    # Check if player1 (or player2) has won
-    # TODO: REDO THIS!!!!!!! PLAYER1/PLAYER2 DEPRECATED IN FAVOR OF FIRST/SECOND AND 'names' PARAM
+    # Check if player1 or player2 has won
     def checkWinner(self):
         p1_points, p2_points = 0, 0
         p1_ct, p2_ct = 0, 0

@@ -169,5 +169,3 @@ class HumanPlayer:
         self.discard = None
         self.facedown = None
         random.shuffle(self.moves_left)
-
-

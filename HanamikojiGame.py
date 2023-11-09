@@ -16,6 +16,7 @@ class HanamikojiGame:
         self.board = board
         self.round = 0
     
+    # Setup a new round
     def initializeRound(self):
         self.round += 1
         print(f"Setting up for Round #{self.round}")
@@ -38,6 +39,7 @@ class HanamikojiGame:
             self.p1.draw(self.deck.pop())
             self.p2.draw(self.deck.pop())
     
+    # Have both players play out all 4 moves, check for a winner at the end
     def playRound(self, first_player, second_player):
         print(f"First player: {first_player.name} | Second player: {second_player.name}")
         # Each player has 4 moves
@@ -90,7 +92,7 @@ class HanamikojiGame:
         # There is no winner...yet
         return None
 
-
+    # Overall handler for the game
     def handleGame(self):  
         if random.randint(0, 1) == 0:
             first = self.p1

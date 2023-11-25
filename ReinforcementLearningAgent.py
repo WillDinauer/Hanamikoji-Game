@@ -2,7 +2,7 @@ import random
 
 class RLAgent:
     def __init__(self):
-        # Define your RL agent's model and parameters here
+        # Hanamikoji parameters
         self.hand = []
         self.moves_left = [1, 2, 3, 4]
         self.facedown = None

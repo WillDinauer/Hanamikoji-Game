@@ -9,12 +9,8 @@ class RLAgent:
         self.discard = None
 
     def select_action(self, possible_actions):
-        # Choose an action based on available actions
+        # Choose an available action randomly
         return random.choice(possible_actions)
-
-    def learn(self, state, action, reward, next_state):
-        # Implement your learning algorithm here
-        pass
 
     def get_state(self):
         # Return the agent's internal state

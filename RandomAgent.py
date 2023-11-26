@@ -12,7 +12,7 @@ class RandomAgent:
 
     def select_action(self, observation, possible_actions):
         # Choose an available action randomly
-        print(f"possible_actions: {possible_actions} and random: {random.choice(possible_actions)}")
+        # print(f"possible_actions: {possible_actions} and random: {random.choice(possible_actions)}")
         return random.choice(possible_actions)
 
     def get_state(self):

@@ -1,5 +1,5 @@
 def get_possible_actions(state, storage, player):
-        print(f"getting possible actions for {len(player.hand), tuple(player.moves_left)}")
+        # print(f"getting possible actions for {len(player.hand), tuple(player.moves_left)}")
         # Determine the available actions based on the current state
 
         # Response action
@@ -13,7 +13,7 @@ def get_possible_actions(state, storage, player):
         # Standard action
         possible_actions = storage[len(player.hand), tuple(player.moves_left)]
 
-        print(f"got possible actions: {possible_actions}")
+        # print(f"got possible actions: {possible_actions}")
 
         return possible_actions
 

@@ -17,12 +17,13 @@ class HanamikojiEnvironment(gym.Env):
     def reset(self):
         self.current_player = random.choice(self.players)
         self.board.resetFavor()
+        self.round = 0
         self.initializeRound()
         return self.get_state()
     
     def initializeRound(self):
         self.round += 1
-        print(f"Setting up for Round #{self.round}")
+        # print(f"Setting up for Round #{self.round}")
         
         # Reset the board 
         self.board.resetBoard()
@@ -48,7 +49,6 @@ class HanamikojiEnvironment(gym.Env):
 
 
     def step(self, action):
-        print(action)
         curr = self.current_player
         # Apply the chosen action for the current player
         if self.board.response:
@@ -63,6 +63,7 @@ class HanamikojiEnvironment(gym.Env):
                 self.initializeRound()
                 return self.get_state(), self.calculate_reward(curr, winner), False
             else:
+                print(f"Game over after {self.round} rounds")
                 return self.get_state(), self.calculate_reward(curr, winner), True
         else:
             # If we're not waiting for a response, swap the current player and have them draw a card
@@ -101,13 +102,13 @@ class HanamikojiEnvironment(gym.Env):
                 p2_points += self.values[i]
                 p2_ct += 1
 
-        print(f"Points: p1 - {p1_points}, p2 - {p2_points}")
+        # print(f"Points: p1 - {p1_points}, p2 - {p2_points}")
         if p1_points >= 11:
             return self.players[0]
         if p2_points >= 11:
             return self.players[1]
         
-        print(f"Favor: {self.board.favor}")
+        # print(f"Favor: {self.board.favor}")
         if p1_ct >= 4:
             return self.players[0]
         if p2_ct >= 4:

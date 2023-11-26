@@ -13,7 +13,7 @@ storage = precompute_possibilities()
 env = HanamikojiEnvironment(agent1, agent2)
 
 # Training parameters
-num_episodes = 1
+num_episodes = 5
 learning_rate = 0.1
 discount_rate = 0.99
 
@@ -22,6 +22,7 @@ max_exploration_rate = 1
 min_exploration_rate = 0.01
 exploration_decay_rate = 0.001
 
+winner = []
 # Train the agent
 for episode in range(num_episodes):
     state = env.reset()

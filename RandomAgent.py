@@ -12,6 +12,7 @@ class RandomAgent:
 
     def select_action(self, observation, possible_actions):
         # Choose an available action randomly
+        print(f"possible_actions: {possible_actions} and random: {random.choice(possible_actions)}")
         return random.choice(possible_actions)
 
     def get_state(self):
@@ -69,8 +70,13 @@ class RandomAgent:
                 opponent_cards = g1
         board.response_buffer = []
         board.response = False
-        board.publish(self.side, my_cards)
-        board.publish(opponent_side, opponent_cards)
+
+        arr = []
+        for card in my_cards:
+            arr.append([self.side, card])
+        for card in opponent_cards:
+            arr.append([opponent_side, card])
+        board.place_cards(arr)
 
     def finished(self):
         # Have I played all my moves?

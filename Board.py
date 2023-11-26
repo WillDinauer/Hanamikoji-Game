@@ -17,14 +17,22 @@ class Board:
         self.response_buffer = []
 
     # Place cards on the board.
-    # arr is an array containing [player, card] pairs
-    def placeCards(self, arr):
+    # arr is an array containing [player_side, card] pairs
+    def place_cards(self, arr):
         for pair in arr:
             if pair[0] == 0:
                 self.player1_side[pair[1]] += 1
             else:
                 self.player2_side[pair[1]] += 1
-    
+
+    def get_state(self):
+        return {
+            "player1_side": self.player1_side,
+            "player2_side": self.player2_side,
+            "favor": self.favor,
+            "response_buffer": self.response_buffer,
+        }
+
     def resetBoard(self):
         self.player1_side = [0 for i in range(7)]
         self.player2_side = [0 for i in range(7)]

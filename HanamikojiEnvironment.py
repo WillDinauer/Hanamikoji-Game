@@ -13,23 +13,6 @@ class HanamikojiEnvironment(gym.Env):
         self.deck = self.starting_deck.copy()
         self.current_player = None
         self.round = 0
-        self.storage = self.precompute_possibilities()
-
-    def get_possible_actions(self, state):
-        # Determine the available actions based on the current state
-
-        # Response action
-        if state['opponent']['offer'] > 0:
-            # Possible actions are the indices of choice
-            if len(state['opponent']['selection'] == 4):
-                return [1, 2]
-            else:
-                return [1, 2, 3]
-
-        # Standard action    
-        possible_actions = self.storage[len(self.current_player.hand), tuple(self.current_player.moves_left)]
-    
-        return possible_actions
 
     def reset(self):
         self.current_player = random.choice(self.players)
@@ -62,6 +45,7 @@ class HanamikojiEnvironment(gym.Env):
 
 
     def step(self, action):
+        print(action)
         curr = self.current_player
         # Apply the chosen action for the current player
         if self.board.response:
@@ -84,6 +68,7 @@ class HanamikojiEnvironment(gym.Env):
     def get_state(self):
         # Return the game state representation (e.g., cards in hand, board state, current player)
         state = {
+            "active": self.current_player,
             "board": self.board.get_state(),
             "current_player": self.current_player.get_state(),
             "opponent": self.get_opponent().get_limited_state()
@@ -136,47 +121,3 @@ class HanamikojiEnvironment(gym.Env):
         
     def get_opponent(self):
         return self.players[1] if self.current_player == self.players[0] else self.players[0]
-    
-    def precompute_possibilities(self):
-        storage = {}
-        possible_ml = []
-        ml = []
-
-        def recursive_ml(idx):
-            if idx == 4:
-                if len(ml) > 0:
-                    possible_ml.append(ml.copy())
-                return
-            recursive_ml(idx+1)
-            ml.append(idx)
-            recursive_ml(idx+1)
-            ml.remove(idx)
-
-        recursive_ml(0)
-
-        for i in range(1, 7):
-            for ml in possible_ml:
-                actions = []
-                for move in ml:
-                    if move == 0:
-                        for j in range(i):
-                            actions.append(j)
-                    if move == 1:
-                        for j in range(i):
-                            for k in range(j+1, i):
-                                actions.append((j, k))
-                    if move == 2:
-                        for j in range(i):
-                            for k in range(j+1, i):
-                                for l in range(k+1, i):
-                                    actions.append((j, k, l))
-                    if move == 3:
-                        for j in range(i):
-                            for k in range(j+1, i):
-                                for l in range(k+1, i):
-                                    for m in range(l+1, i):
-                                        actions.append((j, k, l, m))
-                                        actions.append((j, l, k, m))
-                                        actions.append((j, m, k, l))
-                storage[i, tuple(ml)] = actions
-        return storage

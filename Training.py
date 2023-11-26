@@ -1,16 +1,19 @@
 from HanamikojiEnvironment import HanamikojiEnvironment
 from RandomAgent import RandomAgent
+from utils import get_possible_actions, precompute_possibilities
 
 # Create a reinforcement learning agent
 agent1 = RandomAgent(0)
 agent2 = RandomAgent(1)
 players = [agent1, agent2]
 
+storage = precompute_possibilities()
+
 # Create a Hanamikoji environment
 env = HanamikojiEnvironment(agent1, agent2)
 
 # Training parameters
-num_episodes = 100
+num_episodes = 1
 learning_rate = 0.1
 discount_rate = 0.99
 
@@ -25,9 +28,11 @@ for episode in range(num_episodes):
     done = False
     while not done:
         # Environment tracks the current player
-        curr_player = env.current_player
+        curr_player = state['active']
 
-        action = curr_player.select_action(state)
-        next_state, reward, done, _ = env.step(action)
+        possible_actions = get_possible_actions(state, storage, curr_player)
+
+        action = curr_player.select_action(state, possible_actions)
+        next_state, reward, done = env.step(action)
 
         state = next_state

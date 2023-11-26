@@ -43,6 +43,9 @@ class HanamikojiEnvironment(gym.Env):
             for player in self.players:
                 player.draw(self.deck.pop())
 
+        # Current player draws a card for the first turn
+        self.current_player.draw(self.deck.pop())
+
 
     def step(self, action):
         print(action)
@@ -57,12 +60,15 @@ class HanamikojiEnvironment(gym.Env):
         if self.is_round_over():
             winner = self.check_winner()
             if winner is None:
+                self.initializeRound()
                 return self.get_state(), self.calculate_reward(curr, winner), False
             else:
                 return self.get_state(), self.calculate_reward(curr, winner), True
         else:
+            # If we're not waiting for a response, swap the current player and have them draw a card
             if not self.board.response:
                 self.current_player = self.get_opponent()
+                self.current_player.draw(self.deck.pop())
             return self.get_state(), 0, False
 
     def get_state(self):

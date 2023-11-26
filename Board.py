@@ -13,6 +13,8 @@ class Board:
                            4: colored("3", "white"),
                            5: colored("4", "green"),
                            6: colored("5", "light_cyan")}
+        self.response = False
+        self.response_buffer = []
 
     # Place cards on the board.
     # arr is an array containing [player, card] pairs

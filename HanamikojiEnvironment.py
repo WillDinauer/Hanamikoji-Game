@@ -8,6 +8,7 @@ class HanamikojiEnvironment(gym.Env):
     def __init__(self, player1, player2):
         self.board = Board()
         self.players = [player1, player2]
+        self.values = [2, 2, 2, 3, 3, 4, 5]
         self.starting_deck = [0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6]
         self.deck = self.starting_deck.copy()
         self.current_player = None
@@ -61,15 +62,23 @@ class HanamikojiEnvironment(gym.Env):
 
 
     def step(self, action):
+        curr = self.current_player
         # Apply the chosen action for the current player
-        self.current_player.perform_action(action, self.board, self.players)
+        if self.board.response:
+            self.current_player.handle_response(action, self.board, self.get_opponent().side)
+        else:
+            self.current_player.handle_action(action, self.board)
 
         # Check for game termination and calculate the reward
-        if self.is_game_over():
-            winner = self.get_winner()
-            return self.get_state(), self.calculate_reward(self.current_player, winner), True
+        if self.is_round_over():
+            winner = self.check_winner()
+            if winner is None:
+                return self.get_state(), self.calculate_reward(curr, winner), False
+            else:
+                return self.get_state(), self.calculate_reward(curr, winner), True
         else:
-            self.current_player = self.get_opponent()
+            if not self.board.response:
+                self.current_player = self.get_opponent()
             return self.get_state(), 0, False
 
     def get_state(self):
@@ -81,24 +90,15 @@ class HanamikojiEnvironment(gym.Env):
         }
         return state
 
-    def is_game_over(self):
+    def is_round_over(self):
         # Check if the game is over (e.g., a player has won)
         for player in self.players:
             if not player.finished():
                 return False
         return True
-
-    def get_winner(self):
-        # Determine the winner
-        p1_score, p2_score = self.board.calculate_scores()
-        if p1_score >= 11:
-            return self.players[0]
-        elif p2_score >= 11:
-            return self.players[1]
-        return None
     
     # Check if player1 or player2 has won
-    def checkWinner(self):
+    def check_winner(self):
         p1_points, p2_points = 0, 0
         p1_ct, p2_ct = 0, 0
         for i in range(7):
@@ -112,28 +112,28 @@ class HanamikojiEnvironment(gym.Env):
 
         print(f"Points: p1 - {p1_points}, p2 - {p2_points}")
         if p1_points >= 11:
-            return self.p1
+            return self.players[0]
         if p2_points >= 11:
-            return self.p2
+            return self.players[1]
         
         print(f"Favor: {self.board.favor}")
         if p1_ct >= 4:
-            return self.p1
+            return self.players[0]
         if p2_ct >= 4:
-            return self.p2
+            return self.players[1]
         
         # There is no winner...yet
         return None
 
-    def calculate_reward(self, winner):
+    def calculate_reward(self, curr, winner):
         # Define a reward function based on game outcome
         if winner is None:
             return 0  # No winner yet, the game is ongoing
-        elif winner == self.players[0]:
-            return 1  # Player 1 (AI) wins
+        elif winner == curr:
+            return 1  # Current player wins
         else:
-            return -1  # Player 2 (opponent) wins
-
+            return -1  # Opponent wins
+        
     def get_opponent(self):
         return self.players[1] if self.current_player == self.players[0] else self.players[0]
     

@@ -44,7 +44,7 @@ class Board:
         self.resetBoard()
         self.resetFavor()
 
-    def whosWinning(self, idx):
+    def whos_winning(self, idx):
         # Player 1 is winning this favor
         if self.player1_side[idx] > self.player2_side[idx]:
             self.favor[idx] = 1
@@ -53,8 +53,8 @@ class Board:
         elif self.player2_side[idx] > self.player1_side[idx]:
             self.favor[idx] = -1
             return -1
-        # Tied influence
-        return 0
+        # Tied influence defaults to the current winner (or neutral)
+        return self.favor[idx]
     
     def printBoard(self):
         print(f"  - - - - - - - - - - - - - - - - - - - -  ")

@@ -4,11 +4,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
+import random
 
 class DeepQNetwork(nn.Module):
     def __init__(self, lr, input_dims, fc1_dims, fc2_dims, n_actions):
         super(DeepQNetwork, self).__init__()
-        self.input_dims = input_dims,
+        self.input_dims = input_dims
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
         self.n_actions = n_actions
@@ -57,13 +58,36 @@ class DQNAgent:
         # Hanamikoji parameters
         self.hand = []
         self.moves_left = [1, 2, 3, 4]
+        self.responses_left = [1, 2]
         self.facedown = None
         self.discard = None
 
     def select_action(self, observation, possible_actions):
         # Epsilon-greedy exploit-explore
         if np.random.random() > self.epsilon:
-            state = T.tensor([observation]).to(self.Q_eval.device)
+            # Convert the observation into a normalized feature vector
+            hand = observation['current_player']['hand']
+            moves = observation['current_player']['moves_left']
+            facedown = observation['current_player']['facedown']
+            discard = observation['current_player']['discard']
+            opponent_moves = observation['opponent']['moves_left']
+            max_hand_size = 7
+            max_moves_size = 4
+
+            hand = hand[:max_hand_size] + [0] * (max_hand_size - len(hand))
+            moves = moves[:max_moves_size] + [0] * (max_moves_size - len(moves))
+            opponent_moves = moves[:max_moves_size] + [0] * [max_moves_size - len(opponent_moves)]
+            if facedown is None:
+                facedown = [-1]
+            if discard is None:
+                discard = [-1, -1]
+
+            # 7 + 4 + 1 + 2 + 7 + 7 + 7 + 4 + 1 = 40 parameters
+            observation_values = hand + moves + facedown + discard \
+                + observation['board']['player1_side'] + observation['board']['player2_side'] + observation['favor'] \
+                + opponent_moves + observation['opponent']['hand_size']
+
+            state = T.tensor([observation_values]).to(self.Q_eval.device)
             actions = self.Q_eval.forward(state)
             
             # Filter Q-values for allowed actions
@@ -73,7 +97,7 @@ class DQNAgent:
             action = possible_actions[T.argmax(allowed_q_values).item()]
         else:
             # Randomly select from allowed actions
-            action = np.random.choice(possible_actions)
+            action = random.choice(possible_actions)
         return action
 
     def store_transition(self, state, action, reward, next_state, done):
@@ -85,6 +109,11 @@ class DQNAgent:
         self.terminal_memory[index] = done
 
         self.mem_cntr += 1
+
+    def update_rewards(self, reward):
+        for i in range(6):
+            index = (self.mem_cntr-i-1) % self.mem_size
+            self.reward_memory[index] = reward
 
     def learn(self):
         if self.mem_cntr < self.batch_size:
@@ -132,14 +161,66 @@ class DQNAgent:
             "hand_size": len(self.hand)
         }
     
+    def handle_action(self, action, board):
+        move = len(action)
+        self.moves_left.remove(move)
+        if move == 1:
+            self.facedown = self.hand.pop(action[0])
+        elif move == 2:
+            self.discard = self.get_buffer(action, 2)
+        elif move == 3:
+            board.response = True
+            board.response_buffer = self.get_buffer(action, 3)
+        elif move == 4:
+            board.response = True
+            board.response_buffer = self.get_buffer(action, 4)
+
+    def get_buffer(self, action, n):
+        arr = []
+        for i in range(n):
+            arr.append(self.hand.pop(action[i]-i))
+        return arr
+
+    def handle_response(self, action, board, opponent_side):
+        my_cards = []
+        opponent_cards = []
+        if len(board.response_buffer) == 3:
+            self.responses_left.remove(1)
+            my_cards = [board.response_buffer.pop(action[0])]
+            opponent_cards = board.response_buffer.copy()
+        else:
+            self.responses_left.remove(2)
+            g1 = [board.response_buffer[0], board.response_buffer[1]]
+            g2 = [board.response_buffer[2], board.response_buffer[3]]
+            if action[0] == 0:
+                my_cards = g1
+                opponent_cards = g2
+            else:
+                my_cards = g2
+                opponent_cards = g1
+        board.response_buffer = []
+        board.response = False
+
+        arr = []
+        for card in my_cards:
+            arr.append([self.side, card])
+        for card in opponent_cards:
+            arr.append([opponent_side, card])
+        board.place_cards(arr)
+
     def finished(self):
         # Have I played all my moves?
-        if len(self.moves_left) == 0:
+        if len(self.moves_left) == 0 and len(self.responses_left) == 0:
             return True
         return False
+    
+    def draw(self, card):
+        self.hand.append(card)
+        self.hand.sort()
     
     def resetRound(self):
         self.hand = []
         self.moves_left = [1, 2, 3, 4]
+        self.responses_left = [1, 2]
         self.discard = None
         self.facedown = None

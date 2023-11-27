@@ -58,19 +58,26 @@ class HanamikojiEnvironment(gym.Env):
 
         # Check for game termination and calculate the reward
         if self.is_round_over():
-            winner = self.check_winner()
+            # Reveal the hidden cards and add them to the board
+            arr = []
+            for player in self.players:
+                arr.append([player.side, player.facedown])
+            self.board.place_cards(arr)
+
+            # Check for a winner
+            winner, p1_points, p2_points = self.check_winner()
             if winner is None:
                 self.initializeRound()
-                return self.get_state(), self.calculate_reward(curr, winner), False
+                return self.get_state(), self.calculate_reward(curr, winner), False, {"finished": True}
             else:
                 print(f"Game over after {self.round} rounds")
-                return self.get_state(), self.calculate_reward(curr, winner), True
+                return self.get_state(), self.calculate_reward(curr, winner), True, {"winner": winner, "p1_points": p1_points, "p2_points": p2_points, "finished": True}
         else:
             # If we're not waiting for a response, swap the current player and have them draw a card
             if not self.board.response:
                 self.current_player = self.get_opponent()
                 self.current_player.draw(self.deck.pop())
-            return self.get_state(), 0, False
+            return self.get_state(), 0, False, {"finished": False}
 
     def get_state(self):
         # Return the game state representation (e.g., cards in hand, board state, current player)
@@ -94,7 +101,7 @@ class HanamikojiEnvironment(gym.Env):
         p1_points, p2_points = 0, 0
         p1_ct, p2_ct = 0, 0
         for i in range(7):
-            winning = self.board.whosWinning(i)
+            winning = self.board.whos_winning(i)
             if winning == 1:
                 p1_points += self.values[i]
                 p1_ct += 1
@@ -104,18 +111,18 @@ class HanamikojiEnvironment(gym.Env):
 
         # print(f"Points: p1 - {p1_points}, p2 - {p2_points}")
         if p1_points >= 11:
-            return self.players[0]
+            return self.players[0], p1_points, p2_points
         if p2_points >= 11:
-            return self.players[1]
-        
-        # print(f"Favor: {self.board.favor}")
+            return self.players[1], p1_points, p2_points
+
+        # print(f"Favor: {self.board.favor}, {p1_ct}, {p2_ct}")        
         if p1_ct >= 4:
-            return self.players[0]
+            return self.players[0], p1_points, p2_points
         if p2_ct >= 4:
-            return self.players[1]
+            return self.players[1], p1_points, p2_points
         
         # There is no winner...yet
-        return None
+        return None, p1_points, p2_points
 
     def calculate_reward(self, curr, winner):
         # Define a reward function based on game outcome

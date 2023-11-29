@@ -2,6 +2,7 @@ from HanamikojiEnvironment import HanamikojiEnvironment
 from RandomAgent import RandomAgent
 from DQNAgent import DQNAgent
 from utils import get_possible_actions, precompute_possibilities
+import numpy as np
 
 # Create a reinforcement learning agent
 # agent1 = RandomAgent(0)
@@ -30,7 +31,6 @@ scores, eps_history = [], []
 for episode in range(num_episodes):
     state = env.reset()
     done = False
-    score = 0
     while not done:
         # Environment tracks the current player
         curr_player = state['active']
@@ -40,20 +40,25 @@ for episode in range(num_episodes):
         action = curr_player.select_action(state, possible_actions)
         next_state, reward, done, info = env.step(action)
 
+        if curr_player is agent1:
+            agent1.store_transition(state, action, reward, next_state, done)
+
         # TODO: move this into env
         # Learn when the round ends
-        if False:
+        if info['finished']:
             actual_reward = info['p1_points']-info['p2_points']
             if done:
                 if info['winner'] == agent1:
                     # Reward the agent for winning
-                    reward += 5
+                    actual_reward += 5
                 else:
                     # Punish the agent for losing
-                    reward -= 5
+                    actual_reward -= 5
             agent1.update_rewards(actual_reward)
-
+            scores.append(actual_reward)
+            agent1.learn()
 
         state = next_state
-
-    scores.append(score)
+    eps_history.append(agent1.epsilon)
+    avg_score = np.mean(scores[-100:])
+    print(f'episode: {episode} | avg_score: {avg_score}')

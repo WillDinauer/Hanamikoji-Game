@@ -68,7 +68,7 @@ class HanamikojiEnvironment(gym.Env):
             winner, p1_points, p2_points = self.check_winner()
             if winner is None:
                 self.initializeRound()
-                return self.get_state(), self.calculate_reward(curr, winner), False, {"finished": True}
+                return self.get_state(), self.calculate_reward(curr, winner), False, {"finished": True, "p1_points": p1_points, "p2_points": p2_points}
             else:
                 print(f"Game over after {self.round} rounds")
                 return self.get_state(), self.calculate_reward(curr, winner), True, {"winner": winner, "p1_points": p1_points, "p2_points": p2_points, "finished": True}

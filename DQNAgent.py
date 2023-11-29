@@ -59,33 +59,36 @@ class DQNAgent:
         self.hand = []
         self.moves_left = [1, 2, 3, 4]
         self.responses_left = [1, 2]
-        self.facedown = None
-        self.discard = None
+        self.facedown = -1
+        self.discard = [-1, -1]
+
+    def convert_state(self, observation):
+        # Convert the observation into a normalized feature vector
+        hand = observation['current_player']['hand']
+        moves = observation['current_player']['moves_left']
+        facedown = observation['current_player']['facedown']
+        discard = observation['current_player']['discard']
+        opponent_moves = observation['opponent']['moves_left']
+        max_hand_size = 7
+        max_moves_size = 4
+
+        hand = hand[:max_hand_size] + [0] * (max_hand_size - len(hand))
+        moves = moves[:max_moves_size] + [0] * (max_moves_size - len(moves))
+        opponent_moves = opponent_moves[:max_moves_size] + [0] * (max_moves_size - len(opponent_moves))
+
+        # print(f"{len(hand)}{len(moves)}{len(facedown)}{len(discard)}{len(observation['board']['player1_side'])}{len(observation['board']['player2_side'])}{len(observation['board']['favor'])}{len(opponent_moves)}{len([observation['opponent']['hand_size']])}")
+        # print(f"{type(hand)}{type(moves)}{type(facedown)}{type(discard)}{type(observation['board']['player1_side'])}{type(observation['board']['player2_side'])}{type(observation['board']['favor'])}{type(opponent_moves)}{type([observation['opponent']['hand_size']])}")
+        
+        # 7 + 4 + 1 + 2 + 7 + 7 + 7 + 4 + 1 = 40 parameter
+        observation_values = hand + moves + [facedown] + discard \
+            + observation['board']['player1_side'] + observation['board']['player2_side'] + observation['board']['favor'] \
+            + opponent_moves + [observation['opponent']['hand_size']]
+        return observation_values
 
     def select_action(self, observation, possible_actions):
         # Epsilon-greedy exploit-explore
         if np.random.random() > self.epsilon:
-            # Convert the observation into a normalized feature vector
-            hand = observation['current_player']['hand']
-            moves = observation['current_player']['moves_left']
-            facedown = observation['current_player']['facedown']
-            discard = observation['current_player']['discard']
-            opponent_moves = observation['opponent']['moves_left']
-            max_hand_size = 7
-            max_moves_size = 4
-
-            hand = hand[:max_hand_size] + [0] * (max_hand_size - len(hand))
-            moves = moves[:max_moves_size] + [0] * (max_moves_size - len(moves))
-            opponent_moves = moves[:max_moves_size] + [0] * [max_moves_size - len(opponent_moves)]
-            if facedown is None:
-                facedown = [-1]
-            if discard is None:
-                discard = [-1, -1]
-
-            # 7 + 4 + 1 + 2 + 7 + 7 + 7 + 4 + 1 = 40 parameters
-            observation_values = hand + moves + facedown + discard \
-                + observation['board']['player1_side'] + observation['board']['player2_side'] + observation['favor'] \
-                + opponent_moves + observation['opponent']['hand_size']
+            observation_values = self.convert_state(observation)
 
             state = T.tensor([observation_values]).to(self.Q_eval.device)
             actions = self.Q_eval.forward(state)
@@ -101,6 +104,9 @@ class DQNAgent:
         return action
 
     def store_transition(self, state, action, reward, next_state, done):
+        state = self.convert_state(state)
+        next_state = self.convert_state(next_state)
+        action = self.convert_action(action)
         index = self.mem_cntr % self.mem_size
         self.state_memory[index] = state
         self.action_memory[index] = action
@@ -109,6 +115,10 @@ class DQNAgent:
         self.terminal_memory[index] = done
 
         self.mem_cntr += 1
+
+    # Convert action into a string
+    def convert_action(self, action):
+        return ''.join(map(str, action))
 
     def update_rewards(self, reward):
         for i in range(6):
@@ -222,5 +232,5 @@ class DQNAgent:
         self.hand = []
         self.moves_left = [1, 2, 3, 4]
         self.responses_left = [1, 2]
-        self.discard = None
-        self.facedown = None
+        self.discard = [-1, -1]
+        self.facedown = -1

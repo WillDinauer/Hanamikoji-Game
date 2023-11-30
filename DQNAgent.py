@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 import random
+from utils import create_action_dict
 
 class DeepQNetwork(nn.Module):
     def __init__(self, lr, input_dims, fc1_dims, fc2_dims, n_actions):
@@ -29,7 +30,7 @@ class DeepQNetwork(nn.Module):
         x = F.relu(self.fc2(x))
         actions = self.fc3(x)
 
-        return actions
+        return actions.float()
 
 class DQNAgent:
     def __init__(self, gamma, epsilon, lr, input_dims, batch_size, n_actions, side,
@@ -44,6 +45,7 @@ class DQNAgent:
         self.batch_size = batch_size
         self.mem_cntr = 0
         self.side = side
+        self.action_dict = create_action_dict()
 
         self.Q_eval = DeepQNetwork(self.lr, n_actions=n_actions, input_dims=input_dims,
                                    fc1_dims=256, fc2_dims=256)
@@ -103,9 +105,10 @@ class DQNAgent:
             action = random.choice(possible_actions)
         return action
 
-    def store_transition(self, state, action, reward, next_state, done):
+    def store_transition(self, state, action, reward, next_state, done, terminal):
         state = self.convert_state(state)
-        next_state = self.convert_state(next_state)
+        if not terminal:
+            next_state = self.convert_state(next_state)
         action = self.convert_action(action)
         index = self.mem_cntr % self.mem_size
         self.state_memory[index] = state
@@ -115,10 +118,16 @@ class DQNAgent:
         self.terminal_memory[index] = done
 
         self.mem_cntr += 1
-
+    
     # Convert action into a string
     def convert_action(self, action):
-        return ''.join(map(str, action))
+        if type(action) == list:
+            if len(action) == 1:
+                action = action[0]
+            else:
+                action = tuple(action)
+
+        return self.action_dict[action]
 
     def update_rewards(self, reward):
         for i in range(6):

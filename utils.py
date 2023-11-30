@@ -60,3 +60,34 @@ def precompute_possibilities():
                                     actions.append((j, m, k, l))
             storage[i, tuple(ml)] = actions
     return storage
+
+
+def create_action_dict():
+    action_dict = {}
+
+    action = 0
+    for i in range(7):
+        action_dict[i] = str(action)
+        action += 1
+
+    for i in range(7):
+        for j in range(i+1, 7):
+            action_dict[(i, j)] = str(action)
+            action += 1
+
+    for i in range(7):
+        for j in range(i+1, 7):
+            for k in range(j+1, 7):
+                action_dict[(i, j, k)] = str(action)
+                action += 1
+
+    for i in range(7):
+        for j in range(i, 7):
+            for k in range(j+1, 7):
+                for m in range(k+1, 7):
+                    action_dict[(i, j, k, m)] = str(action)
+                    action_dict[(i, m, j, k)] = str(action+1)
+                    action_dict[(i, k, j, m)] = str(action+2)
+                    action += 3
+
+    return action_dict

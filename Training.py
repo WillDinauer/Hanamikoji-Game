@@ -16,7 +16,7 @@ storage = precompute_possibilities()
 env = HanamikojiEnvironment(agent1, agent2)
 
 # Training parameters
-num_episodes = 1
+num_episodes = 100
 learning_rate = 0.1
 discount_rate = 0.99
 
@@ -31,6 +31,7 @@ scores, eps_history = [], []
 for episode in range(num_episodes):
     state = env.reset()
     done = False
+    stored_state = None
     while not done:
         # Environment tracks the current player
         curr_player = state['active']
@@ -41,11 +42,15 @@ for episode in range(num_episodes):
         next_state, reward, done, info = env.step(action)
 
         if curr_player is agent1:
-            agent1.store_transition(state, action, reward, next_state, done)
-
+            if stored_state is not None:
+                agent1.store_transition(stored_state, action, reward, state, done, False)
+            stored_state = state
+        
         # TODO: move this into env
         # Learn when the round ends
         if info['finished']:
+            state = [0] * 40
+            agent1.store_transition(stored_state, action, reward, state, done, True)
             actual_reward = info['p1_points']-info['p2_points']
             if done:
                 if info['winner'] == agent1:
@@ -54,6 +59,7 @@ for episode in range(num_episodes):
                 else:
                     # Punish the agent for losing
                     actual_reward -= 5
+            stored_state = None
             agent1.update_rewards(actual_reward)
             scores.append(actual_reward)
             agent1.learn()

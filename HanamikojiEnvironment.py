@@ -50,10 +50,13 @@ class HanamikojiEnvironment(gym.Env):
 
     def step(self, action):
         curr = self.current_player
+        # print(f"side: {self.current_player.side} action: {action}")
         # Apply the chosen action for the current player
         if self.board.response:
+            was_response = True
             self.current_player.handle_response(action, self.board, self.get_opponent().side)
         else:
+            was_response = False
             self.current_player.handle_action(action, self.board)
 
         # Check for game termination and calculate the reward
@@ -70,12 +73,13 @@ class HanamikojiEnvironment(gym.Env):
                 self.initializeRound()
                 return self.get_state(), self.calculate_reward(curr, winner), False, {"finished": True, "p1_points": p1_points, "p2_points": p2_points}
             else:
-                print(f"Game over after {self.round} rounds")
+                # print(f"Game over after {self.round} rounds")
                 return self.get_state(), self.calculate_reward(curr, winner), True, {"winner": winner, "p1_points": p1_points, "p2_points": p2_points, "finished": True}
         else:
             # If we're not waiting for a response, swap the current player and have them draw a card
-            if not self.board.response:
+            if not was_response:
                 self.current_player = self.get_opponent()
+            if not self.board.response:
                 self.current_player.draw(self.deck.pop())
             return self.get_state(), 0, False, {"finished": False}
 

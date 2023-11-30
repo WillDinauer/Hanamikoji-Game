@@ -16,7 +16,7 @@ storage = precompute_possibilities()
 env = HanamikojiEnvironment(agent1, agent2)
 
 # Training parameters
-num_episodes = 100
+num_episodes = 10000
 learning_rate = 0.1
 discount_rate = 0.99
 

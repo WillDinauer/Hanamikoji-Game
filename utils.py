@@ -64,30 +64,38 @@ def precompute_possibilities():
 
 def create_action_dict():
     action_dict = {}
+    int_dict = {}
 
     action = 0
     for i in range(7):
-        action_dict[i] = str(action)
+        action_dict[i] = action
+        int_dict[action] = [i]
         action += 1
 
     for i in range(7):
         for j in range(i+1, 7):
-            action_dict[(i, j)] = str(action)
+            action_dict[(i, j)] = action
+            int_dict[action] = (i, j)
             action += 1
 
     for i in range(7):
         for j in range(i+1, 7):
             for k in range(j+1, 7):
-                action_dict[(i, j, k)] = str(action)
+                action_dict[(i, j, k)] = action
+                int_dict[action] = (i, j, k)
                 action += 1
 
     for i in range(7):
         for j in range(i, 7):
             for k in range(j+1, 7):
                 for m in range(k+1, 7):
-                    action_dict[(i, j, k, m)] = str(action)
-                    action_dict[(i, m, j, k)] = str(action+1)
-                    action_dict[(i, k, j, m)] = str(action+2)
+                    action_dict[(i, j, k, m)] = action
+                    action_dict[(i, m, j, k)] = action+1
+                    action_dict[(i, k, j, m)] = action+2
+
+                    int_dict[action] = (i, j, k, m)
+                    int_dict[action+1] = (i, m, j, k)
+                    int_dict[action+2] = (i, k, j, m)
                     action += 3
 
-    return action_dict
+    return action_dict, int_dict

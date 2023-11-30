@@ -30,7 +30,7 @@ class DeepQNetwork(nn.Module):
         x = F.relu(self.fc2(x))
         actions = self.fc3(x)
 
-        return actions.float()
+        return actions
 
 class DQNAgent:
     def __init__(self, gamma, epsilon, lr, input_dims, batch_size, n_actions, side,
@@ -45,7 +45,7 @@ class DQNAgent:
         self.batch_size = batch_size
         self.mem_cntr = 0
         self.side = side
-        self.action_dict = create_action_dict()
+        self.action_dict, self.int_dict = create_action_dict()
 
         self.Q_eval = DeepQNetwork(self.lr, n_actions=n_actions, input_dims=input_dims,
                                    fc1_dims=256, fc2_dims=256)
@@ -92,14 +92,19 @@ class DQNAgent:
         if np.random.random() > self.epsilon:
             observation_values = self.convert_state(observation)
 
-            state = T.tensor([observation_values]).to(self.Q_eval.device)
+            state = T.tensor([observation_values], dtype=T.float32).to(self.Q_eval.device)
             actions = self.Q_eval.forward(state)
             
-            # Filter Q-values for allowed actions
-            allowed_q_values = actions[:, possible_actions]
+            # Convert the possible actions to their associated number
+            possible_actions = [self.convert_action(a) for a in possible_actions]
             
+            # Filter Q-values for allowed actions
+            # allowed_q_values = actions[:, possible_actions]
+            allowed_q_values = T.tensor([actions[0][a] for a in possible_actions], dtype=T.float32).to(self.Q_eval.device)
+
             # Choose the action with the highest Q-value from the allowed actions
             action = possible_actions[T.argmax(allowed_q_values).item()]
+            action = self.int_dict[action]
         else:
             # Randomly select from allowed actions
             action = random.choice(possible_actions)
@@ -109,7 +114,7 @@ class DQNAgent:
         state = self.convert_state(state)
         if not terminal:
             next_state = self.convert_state(next_state)
-        action = self.convert_action(action)
+        action = str(self.convert_action(action))
         index = self.mem_cntr % self.mem_size
         self.state_memory[index] = state
         self.action_memory[index] = action
@@ -119,7 +124,6 @@ class DQNAgent:
 
         self.mem_cntr += 1
     
-    # Convert action into a string
     def convert_action(self, action):
         if type(action) == list:
             if len(action) == 1:
@@ -181,6 +185,7 @@ class DQNAgent:
         }
     
     def handle_action(self, action, board):
+        # print(action)
         move = len(action)
         self.moves_left.remove(move)
         if move == 1:

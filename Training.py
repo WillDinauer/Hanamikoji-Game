@@ -26,9 +26,9 @@ min_exploration_rate = 0.01
 exploration_decay_rate = 0.001
 
 scores, eps_history = [], []
-
+win, loss = 0, 0
 # Train the agent
-for episode in range(num_episodes):
+for episode in range(1, num_episodes+1):
     state = env.reset()
     done = False
     stored_state = None
@@ -56,9 +56,11 @@ for episode in range(num_episodes):
                 if info['winner'] == agent1:
                     # Reward the agent for winning
                     actual_reward += 5
+                    win += 1
                 else:
                     # Punish the agent for losing
                     actual_reward -= 5
+                    loss += 1
             stored_state = None
             agent1.update_rewards(actual_reward)
             scores.append(actual_reward)
@@ -66,5 +68,9 @@ for episode in range(num_episodes):
 
         state = next_state
     eps_history.append(agent1.epsilon)
-    avg_score = np.mean(scores[-100:])
-    print(f'episode: {episode} | avg_score: {avg_score}')
+    if episode % 100 == 0:
+        avg_score = np.mean(scores)
+        print(f'episode: {episode} | avg_score: {avg_score} | win %: {win/(win+loss)}')
+    else:
+        # print(f'episode: {episode} | score: {scores[-1]}')
+        pass

@@ -17,14 +17,14 @@ storage = precompute_possibilities()
 env = HanamikojiEnvironment(agent1, agent2)
 
 # Training parameters
-num_episodes = 10000
+num_episodes = 100
 learning_rate = 0.1
 discount_rate = 0.99
 
 exploration_rate = 1
 max_exploration_rate = 1
 min_exploration_rate = 0.01
-exploration_decay_rate = 0.0001
+exploration_decay_rate = 0.001
 
 scores, eps_history, percent = [], [], []
 win, loss = 0, 0
@@ -71,12 +71,16 @@ for episode in range(1, num_episodes+1):
     eps_history.append(agent1.epsilon)
     win_percent = win / (win + loss)
     percent.append(win_percent)
+    avg_score = np.mean(scores)
     if episode % 100 == 0:
-        avg_score = np.mean(scores)
         print(f'episode: {episode} | avg_score: {avg_score} | win %: {win_percent}')
     else:
         # print(f'episode: {episode} | score: {scores[-1]}')
         pass
+# Save the trained model
+agent1.save_model()
+
+# Plotting
 x = [i+1 for i in range(num_episodes)]
 plot_learning(x, scores, eps_history, 'TrainingPlots/DQN_Learn.png')
 plot_single(x, percent, 'TrainingPlots/DQN_Win.png')

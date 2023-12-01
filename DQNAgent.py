@@ -137,6 +137,10 @@ class DQNAgent:
         for i in range(6):
             index = (self.mem_cntr-i-1) % self.mem_size
             self.reward_memory[index] = reward
+    
+    def save_model(self):
+        # Save the model
+        T.save(self.Q_eval, 'Models/DQN_Model.pth')
 
     def learn(self):
         if self.mem_cntr < self.batch_size:

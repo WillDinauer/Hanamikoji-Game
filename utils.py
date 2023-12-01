@@ -8,6 +8,7 @@ William Dinauer, November 2023
 """
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 
 def get_possible_actions(state, storage, player):
@@ -151,18 +152,19 @@ def plot_learning(x, scores, epsilons, filename, lines=None):
     N = len(scores)
     running_avg = np.empty(N)
     for t in range(N):
-        running_avg[t] = np.mean(scores[max(0, t-20):(t+1)])
+        running_avg[t] = np.mean(scores[max(0, t-10000):(t+1)])
 
     ax2.scatter(x, running_avg, color="C1")
     #ax2.xaxis.tick_top()
     ax2.axes.get_xaxis().set_visible(False)
     ax2.yaxis.tick_right()
     #ax2.set_xlabel('x label 2', color="C1")
-    ax2.set_ylabel('Score', color="C1")
+    ax2.set_ylabel('Average Score', color="C1")
     #ax2.xaxis.set_label_position('top')
     ax2.yaxis.set_label_position('right')
     #ax2.tick_params(axis='x', colors="C1")
     ax2.tick_params(axis='y', colors="C1")
+    ax2.grid(True)
 
     if lines is not None:
         for line in lines:
@@ -175,13 +177,23 @@ def plot_single(x, percent, filename, lines=None):
     Plotting function for a single parameter
     """
     fig = plt.figure()
-    ax=fig.add_subplot(111, label="1")
-    ax2=fig.add_subplot(111, label="2", frame_on=False)
-
+    
+    ax = fig.add_subplot(111, label="1")
     ax.plot(x, percent, color="C0")
     ax.set_xlabel("Episodes", color="C0")
     ax.set_ylabel("Win-Percent", color="C0")
     ax.tick_params(axis='x', colors="C0")
     ax.tick_params(axis='y', colors="C0")
 
+    # Enable grid
+    ax.grid(True)
+
+    # Add more precision to the y-axis
+    ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
+
+    if lines is not None:
+        for line in lines:
+            ax.axhline(line, color='red', linestyle='--')
+
     plt.savefig(filename)
+    plt.show()  # Optionally, display the plot

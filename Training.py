@@ -1,8 +1,9 @@
 from HanamikojiEnvironment import HanamikojiEnvironment
 from RandomAgent import RandomAgent
 from DQNAgent import DQNAgent
-from utils import get_possible_actions, precompute_possibilities
+from utils import get_possible_actions, precompute_possibilities, plot_learning, plot_single
 import numpy as np
+import matplotlib.pyplot as plt
 
 # Create a reinforcement learning agent
 # agent1 = RandomAgent(0)
@@ -23,9 +24,9 @@ discount_rate = 0.99
 exploration_rate = 1
 max_exploration_rate = 1
 min_exploration_rate = 0.01
-exploration_decay_rate = 0.001
+exploration_decay_rate = 0.0001
 
-scores, eps_history = [], []
+scores, eps_history, percent = [], [], []
 win, loss = 0, 0
 # Train the agent
 for episode in range(1, num_episodes+1):
@@ -61,16 +62,21 @@ for episode in range(1, num_episodes+1):
                     # Punish the agent for losing
                     actual_reward -= 5
                     loss += 1
+                scores.append(actual_reward)
             stored_state = None
             agent1.update_rewards(actual_reward)
-            scores.append(actual_reward)
             agent1.learn()
 
         state = next_state
     eps_history.append(agent1.epsilon)
+    win_percent = win / (win + loss)
+    percent.append(win_percent)
     if episode % 100 == 0:
         avg_score = np.mean(scores)
-        print(f'episode: {episode} | avg_score: {avg_score} | win %: {win/(win+loss)}')
+        print(f'episode: {episode} | avg_score: {avg_score} | win %: {win_percent}')
     else:
         # print(f'episode: {episode} | score: {scores[-1]}')
         pass
+x = [i+1 for i in range(num_episodes)]
+plot_learning(x, scores, eps_history, 'TrainingPlots/DQN_Learn.png')
+plot_single(x, percent, 'TrainingPlots/DQN_Win.png')

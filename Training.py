@@ -3,7 +3,6 @@ from RandomAgent import RandomAgent
 from DQNAgent import DQNAgent
 from utils import get_possible_actions, precompute_possibilities, plot_learning, plot_single
 import numpy as np
-import matplotlib.pyplot as plt
 
 # Create a reinforcement learning agent
 # agent1 = RandomAgent(0)
@@ -17,14 +16,14 @@ storage = precompute_possibilities()
 env = HanamikojiEnvironment(agent1, agent2)
 
 # Training parameters
-num_episodes = 100
+num_episodes = 1000000
 learning_rate = 0.1
 discount_rate = 0.99
 
 exploration_rate = 1
 max_exploration_rate = 1
 min_exploration_rate = 0.01
-exploration_decay_rate = 0.001
+exploration_decay_rate = 0.0001
 
 scores, eps_history, percent = [], [], []
 win, loss = 0, 0

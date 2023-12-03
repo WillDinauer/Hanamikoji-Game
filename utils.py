@@ -148,6 +148,7 @@ def plot_learning(x, scores, epsilons, filename, lines=None):
     ax.set_ylabel("Epsilon", color="C0")
     ax.tick_params(axis='x', colors="C0")
     ax.tick_params(axis='y', colors="C0")
+    ax.axes.get_xaxis().set_visible(False)
     
     N = len(scores)
     running_avg = np.empty(N)
@@ -156,7 +157,6 @@ def plot_learning(x, scores, epsilons, filename, lines=None):
 
     ax2.scatter(x, running_avg, color="C1")
     #ax2.xaxis.tick_top()
-    ax2.axes.get_xaxis().set_visible(False)
     ax2.yaxis.tick_right()
     #ax2.set_xlabel('x label 2', color="C1")
     ax2.set_ylabel('Average Score', color="C1")

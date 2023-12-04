@@ -44,7 +44,6 @@ class DQNAgent:
         self.mem_size = max_mem_size
         self.batch_size = batch_size
         self.mem_cntr = 0
-        self.side = side
         self.action_dict, self.int_dict = create_action_dict()
 
         self.Q_eval = DeepQNetwork(self.lr, n_actions=n_actions, input_dims=input_dims,
@@ -58,6 +57,7 @@ class DQNAgent:
         self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool_)
 
         # Hanamikoji parameters
+        self.side = side
         self.hand = []
         self.moves_left = [1, 2, 3, 4]
         self.responses_left = [1, 2]

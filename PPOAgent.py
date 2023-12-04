@@ -51,6 +51,10 @@ class PPOMemory:
         self.vals = []
         self.dones = []
 
+    def update_rewards(self, reward, length):
+        for i in range(len(self.rewards)-1, len(self.rewards)-1-length, -1):
+            self.rewards[i] = reward
+
 class ActorNetwork(nn.Module):
     def __init__(self, n_actions, input_dims, alpha, fc1_dims=256,
                  fc2_dims=256, chkpt_dir='tmp/ppo'):
@@ -111,7 +115,7 @@ class CriticNetwork(nn.Module):
 
 
 class PPOAgent:
-    def __init__(self, n_actions, gamma, alpha, gae_lambda, policy_clip, input_dims, batch_size, N=2048, n_epochs=10):
+    def __init__(self, side, n_actions, gamma, alpha, gae_lambda, policy_clip, input_dims, batch_size, N=2048, n_epochs=10):
         self.gamma = gamma
         self.policy_clip = policy_clip
         self.n_epochs = n_epochs
@@ -121,12 +125,23 @@ class PPOAgent:
         self.critic = CriticNetwork(input_dims, alpha)
         self.memory = PPOMemory(batch_size)
 
+        self.action_dict, self.int_dict = create_action_dict()
+
         # Hanamikoji parameters
+        self.side = side
         self.hand = []
         self.moves_left = [1, 2, 3, 4]
         self.responses_left = [1, 2]
         self.facedown = -1
         self.discard = [-1, -1]
+
+    def remember(self, state, action, probs, vals, reward, done):
+        state = self.convert_state(state)
+        action = self.convert_action(action)
+        self.memory.store_memory(state, action, probs, vals, reward, done)
+
+    def update_rewards(self, reward, length):
+        self.memory.update_rewards(reward, length)
 
     def save_models(self):
         self.actor.save_checkpoint()
@@ -159,19 +174,37 @@ class PPOAgent:
             + opponent_moves + [observation['opponent']['hand_size']]
         return observation_values
     
+    def convert_action(self, action):
+        if type(action) == list:
+            if len(action) == 1:
+                action = action[0]
+            else:
+                action = tuple(action)
+
+        return self.action_dict[action]
+    
     def choose_action(self, observation, possible_actions):
         observation_values = self.convert_state(observation)
-        state = T.tensor([observation_values], dtype=T.float32).to(self.Q_eval.device)
+        state = T.tensor([observation_values], dtype=T.float32).to(self.actor.device)
 
         dist = self.actor(state)
         value = self.critic(state)
         action = dist.sample()
 
+        # Convert the sampled action to the corresponding integer value
+        action_int = T.squeeze(action).item()
+        selected_action = self.int_dict[action_int]
+
+        # Ensure the selected action is within the possible_actions space
+        while selected_action not in possible_actions:
+            action = dist.sample()
+            action_int = T.squeeze(action).item()
+            selected_action = self.int_dict[action_int]
+
         probs = T.squeeze(dist.log_prob(action)).item()
-        action = T.squeeze(action).item()
         value = T.squeeze(value).item()
 
-        return action, probs, value
+        return selected_action, probs, value
     
     def learn(self):
         for _ in range(self.n_epochs):
@@ -194,16 +227,16 @@ class PPOAgent:
             advantage = T.tensor(advantage).to(self.actor.device)
             values = T.tensor(values).to(self.actor.device)
             for batch in batches:
-                states = T.tensor(state_arr[batch], dtype=T.float).to(self.actor.device)
+                states = T.tensor(state_arr[batch], dtype=T.float32).to(self.actor.device)
                 old_probs = T.tensor(old_probs_arr[batch]).to(self.actor.device)
                 actions = T.tensor(action_arr[batch]).to(self.actor.device)
 
-                dist = self.actors(states)
+                dist = self.actor(states)
                 critic_value = self.critic(states)
 
                 critic_value = T.squeeze(critic_value)
 
-                new_probs = dist.log_probs(actions)
+                new_probs = dist.log_prob(actions)
                 prob_ratio = new_probs.exp() / old_probs.exp()
 
                 weighted_probs = advantage[batch] * prob_ratio

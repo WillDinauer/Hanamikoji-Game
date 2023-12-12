@@ -47,6 +47,72 @@ class HanamikojiEnvironment(gym.Env):
         # Current player draws a card for the first turn
         self.current_player.draw(self.deck.pop())
 
+    def handle_action(self, action, board):
+        # print(f"hand: {self.current_player.hand}")
+        move = len(action)
+        self.current_player.moves_left.remove(move)
+        if move == 1:
+            self.current_player.facedown = self.current_player.hand.pop(action[0])
+        elif move == 2:
+            self.current_player.discard = self.get_buffer(action)
+        elif move == 3:
+            board.response = True
+            board.response_buffer = self.get_buffer(action)
+        elif move == 4:
+            board.response = True
+            board.response_buffer = self.get_buffer(action)
+
+    def get_buffer(self, action):
+        arr = []
+        for idx in action:
+            arr.append(self.current_player.hand[idx])
+        for num in arr:
+            self.current_player.hand.remove(num)
+        return arr
+
+    def get_player_state(self, player):
+        # Return the agent's internal state
+        return {
+            "moves_left": player.moves_left,
+            "hand": player.hand,
+            "facedown": player.facedown,
+            "discard": player.discard,
+        }
+    
+    def get_limited_state(self, player):
+        # Return the state that your opponent is allowed to see
+        return {
+            "moves_left": player.moves_left,
+            "hand_size": len(player.hand)
+        }
+
+    def handle_response(self, action, board, opponent_side):
+        # print(f"hand: {self.current_player.hand}")
+        my_cards = []
+        opponent_cards = []
+        if len(board.response_buffer) == 3:
+            self.current_player.responses_left.remove(1)
+            my_cards = [board.response_buffer.pop(action[0])]
+            opponent_cards = board.response_buffer.copy()
+        else:
+            self.current_player.responses_left.remove(2)
+            g1 = [board.response_buffer[0], board.response_buffer[1]]
+            g2 = [board.response_buffer[2], board.response_buffer[3]]
+            if action[0] == 0:
+                my_cards = g1
+                opponent_cards = g2
+            else:
+                my_cards = g2
+                opponent_cards = g1
+        board.response_buffer = []
+        board.response = False
+
+        arr = []
+        for card in my_cards:
+            arr.append([self.current_player.side, card])
+        for card in opponent_cards:
+            arr.append([opponent_side, card])
+        board.place_cards(arr)
 
     def step(self, action):
         curr = self.current_player
@@ -54,10 +120,10 @@ class HanamikojiEnvironment(gym.Env):
         # Apply the chosen action for the current player
         if self.board.response:
             was_response = True
-            self.current_player.handle_response(action, self.board, self.get_opponent().side)
+            self.handle_response(action, self.board, self.get_opponent().side)
         else:
             was_response = False
-            self.current_player.handle_action(action, self.board)
+            self.handle_action(action, self.board)
 
         # Check for game termination and calculate the reward
         if self.is_round_over():
@@ -88,8 +154,8 @@ class HanamikojiEnvironment(gym.Env):
         state = {
             "active": self.current_player,
             "board": self.board.get_state(),
-            "current_player": self.current_player.get_state(),
-            "opponent": self.get_opponent().get_limited_state()
+            "current_player": self.get_player_state(self.current_player),
+            "opponent": self.get_limited_state(self.get_opponent())
         }
         return state
 

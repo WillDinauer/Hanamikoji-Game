@@ -9,6 +9,10 @@ class CleverAgent:
         self.facedown = None
         self.discard = None
         self.side = side
+        self.grid = [[0.09, 0.54, 0.24, 0.11],
+                    [0.35, 0.17, 0.3, 0.17],
+                    [0.38, 0.14, 0.24, 0.22],
+                    [0.17, 0.13, 0.2, 0.48]]
 
     def select_action(self, observation, possible_actions):
         # Choose an available action randomly, as long as it is diverse (if possible)
@@ -28,21 +32,19 @@ class CleverAgent:
             else:
                 return possible_actions[1]
         
-
-        action_len = random.choice(self.moves_left)
+        w = []
+        for i in range(1, 5):
+            if i in self.moves_left:
+                w.append(self.grid[4-len(self.moves_left)][i-1])
+        action_len = random.choices(self.moves_left, weights=tuple(w), k=1)[0]
         maximum = -1
-        minimum = 100
         best_action = 0
         for action in possible_actions:
             if len(action) == action_len:
                 total = 0
                 for idx in action:
                     total += self.hand[idx]
-                if action_len == 2:
-                    if total < minimum:
-                        minimum = total
-                        best_action = action
-                elif total > maximum:
+                if total > maximum:
                     maximum = total
                     best_action = action
         return best_action

@@ -1,15 +1,17 @@
 from HanamikojiEnvironment import HanamikojiEnvironment
 from RandomAgent import RandomAgent
 from MaxAgent import MaxAgent
+from MinAgent import MinAgent
 from DQNAgent import DQNAgent
+from DiverseAgent import DiverseAgent
 from utils import get_possible_actions, precompute_possibilities, plot_learning, plot_single
 import numpy as np
 import csv
 
 # Create a reinforcement learning agent
 # agent1 = RandomAgent(0)
-agent1 = DQNAgent(gamma=0.99, epsilon=1.0, batch_size=6, n_actions=273, eps_end=0.01, input_dims=[40], lr=0.003, side=0)
-agent2 = MaxAgent(1)
+agent1 = DQNAgent(gamma=0.99, epsilon=1.0, batch_size=12, n_actions=273, eps_end=0.01, input_dims=[40], lr=0.005, side=0, eps_dec=5e-5)
+agent2 = RandomAgent(1)
 players = [agent1, agent2]
 
 storage = precompute_possibilities()
@@ -19,7 +21,7 @@ env = HanamikojiEnvironment(agent1, agent2)
 
 # Training parameters
 num_episodes = 100000
-learning_rate = 0.1
+learning_rate = 0.2
 discount_rate = 0.99
 
 exploration_rate = 1
@@ -57,11 +59,11 @@ for episode in range(1, num_episodes+1):
             if done:
                 if info['winner'] == agent1:
                     # Reward the agent for winning
-                    actual_reward += 5
+                    actual_reward += 0
                     win += 1
                 else:
                     # Punish the agent for losing
-                    actual_reward -= 5
+                    actual_reward -= 0
                     loss += 1
                 scores.append(actual_reward)
             stored_state = None
@@ -75,24 +77,28 @@ for episode in range(1, num_episodes+1):
     avg_score = np.mean(scores)
     if episode % 100 == 0:
         print(f'episode: {episode} | avg_score: {avg_score} | win %: {win_percent}')
+        for move_num in agent1.move_freq:
+            total = sum(move_num)
+            percs = [int(move_num[i]*100/total)/100 for i in range(4)]
+            print(percs)
     else:
         # print(f'episode: {episode} | score: {scores[-1]}')
         pass
 # Save the trained model
-agent1.save_model()
+agent1.save_model('Models/DQN_Model_baseline.pth')
 
+x = [i+1 for i in range(num_episodes)]
 # Save data to a CSV file
-with open('TrainingData/dqn_vs_max.csv', 'w', newline='') as csvfile:
+with open('TrainingData/dqn_vs_baseline.csv', 'w', newline='') as csvfile:
     csv_writer = csv.writer(csvfile)
     
     # Write header
     csv_writer.writerow(['Episode', 'Score', 'Win %', 'Eps History'])
     
     # Write data rows
-    for episode, score, eps in zip(x, scores, eps_history):
-        csv_writer.writerow([episode, score, eps])
+    for episode, score, perc, eps in zip(x, scores, percent, eps_history):
+        csv_writer.writerow([episode, score, perc, eps])
 
 # Plotting
-x = [i+1 for i in range(num_episodes)]
-plot_learning(x, scores, eps_history, 'TrainingPlots/DQN_Learn.png')
-plot_single(x, percent, 'TrainingPlots/DQN_Win.png')
+plot_learning(x, scores, eps_history, 'TrainingPlots/DQN_Learn_baseline.png')
+plot_single(x, percent, 'TrainingPlots/DQN_Win_baseline.png')

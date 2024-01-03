@@ -23,7 +23,6 @@ class HanamikojiEnvironment(gym.Env):
     
     def initializeRound(self):
         self.round += 1
-        # print(f"Setting up for Round #{self.round}")
         
         # Reset the board 
         self.board.resetBoard()
@@ -48,7 +47,6 @@ class HanamikojiEnvironment(gym.Env):
         self.current_player.draw(self.deck.pop())
 
     def handle_action(self, action, board):
-        # print(f"hand: {self.current_player.hand}")
         move = len(action)
         self.current_player.moves_left.remove(move)
         if move == 1:
@@ -87,7 +85,6 @@ class HanamikojiEnvironment(gym.Env):
         }
 
     def handle_response(self, action, board, opponent_side):
-        # print(f"hand: {self.current_player.hand}")
         my_cards = []
         opponent_cards = []
         if len(board.response_buffer) == 3:
@@ -116,7 +113,6 @@ class HanamikojiEnvironment(gym.Env):
 
     def step(self, action):
         curr = self.current_player
-        # print(f"side: {self.current_player.side} action: {action}")
         # Apply the chosen action for the current player
         if self.board.response:
             was_response = True
@@ -139,7 +135,6 @@ class HanamikojiEnvironment(gym.Env):
                 self.initializeRound()
                 return self.get_state(), self.calculate_reward(curr, winner), False, {"finished": True, "p1_points": p1_points, "p2_points": p2_points}
             else:
-                # print(f"Game over after {self.round} rounds")
                 return self.get_state(), self.calculate_reward(curr, winner), True, {"winner": winner, "p1_points": p1_points, "p2_points": p2_points, "finished": True}
         else:
             # If we're not waiting for a response, swap the current player and have them draw a card
@@ -168,6 +163,7 @@ class HanamikojiEnvironment(gym.Env):
     
     # Check if player1 or player2 has won
     def check_winner(self):
+        # Calculate points and influenced geishas based on the state of the board
         p1_points, p2_points = 0, 0
         p1_ct, p2_ct = 0, 0
         for i in range(7):
@@ -179,13 +175,13 @@ class HanamikojiEnvironment(gym.Env):
                 p2_points += self.values[i]
                 p2_ct += 1
 
-        # print(f"Points: p1 - {p1_points}, p2 - {p2_points}")
+        # Has anyone accumulated 11 or more points?
         if p1_points >= 11:
             return self.players[0], p1_points, p2_points
         if p2_points >= 11:
             return self.players[1], p1_points, p2_points
-
-        # print(f"Favor: {self.board.favor}, {p1_ct}, {p2_ct}")        
+        
+        # Has anyone won the favor of 4 or more geishas?
         if p1_ct >= 4:
             return self.players[0], p1_points, p2_points
         if p2_ct >= 4:

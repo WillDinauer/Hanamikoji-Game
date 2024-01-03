@@ -8,17 +8,21 @@ import random
 from utils import create_action_dict
 
 class DeepQNetwork(nn.Module):
-    def __init__(self, lr, input_dims, fc1_dims, fc2_dims, n_actions):
+    def __init__(self, lr, input_dims, fc1_dims, fc2_dims, fc3_dims, fc4_dims, n_actions):
         super(DeepQNetwork, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
+        self.fc3_dims = fc3_dims
+        self.fc4_dims = fc4_dims
         self.n_actions = n_actions
 
         # NN setup
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
-        self.fc3 = nn.Linear(self.fc2_dims, self.n_actions)
+        self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
+        self.fc4 = nn.Linear(self.fc3_dims, self.fc4_dims)
+        self.fc5 = nn.Linear(self.fc4_dims, self.n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
@@ -28,7 +32,9 @@ class DeepQNetwork(nn.Module):
     def forward(self, state):
         x = F.relu(self.fc1(state))
         x = F.relu(self.fc2(x))
-        actions = self.fc3(x)
+        x = F.relu(self.fc3(x))
+        x = F.relu(self.fc4(x))
+        actions = self.fc5(x)
 
         return actions
 
@@ -47,7 +53,7 @@ class DQNAgent:
         self.action_dict, self.int_dict = create_action_dict()
 
         self.Q_eval = DeepQNetwork(self.lr, n_actions=n_actions, input_dims=input_dims,
-                                   fc1_dims=1024, fc2_dims=1024)
+                                   fc1_dims=1024, fc2_dims=1024, fc3_dims=512, fc4_dims=512)
         
         self.state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
         self.new_state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
@@ -63,6 +69,8 @@ class DQNAgent:
         self.responses_left = [1, 2]
         self.facedown = -1
         self.discard = [-1, -1]
+
+        self.move_freq = [[0 for i in range(4)] for j in range(4)]
 
     def convert_state(self, observation):
         # Convert the observation into a normalized feature vector
@@ -108,6 +116,10 @@ class DQNAgent:
         else:
             # Randomly select from allowed actions
             action = random.choice(possible_actions)
+
+        # counter to keep track of the frequency of move choices.
+        if len(observation['board']['response_buffer']) == 0:
+            self.move_freq[4-len(self.moves_left)][len(action)-1] += 1
         return action
 
     def store_transition(self, state, action, reward, next_state, done, terminal):
@@ -138,10 +150,13 @@ class DQNAgent:
             index = (self.mem_cntr-i-1) % self.mem_size
             self.reward_memory[index] = reward
     
-    def save_model(self):
+    def save_model(self, name):
         # Save the model
-        T.save(self.Q_eval, 'Models/DQN_Model.pth')
+        T.save(self.Q_eval, name)
 
+    def load_model(self, filepath):
+        self.Q_eval = T.load(filepath)
+    
     def learn(self):
         if self.mem_cntr < self.batch_size:
             return

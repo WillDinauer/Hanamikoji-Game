@@ -11,7 +11,7 @@ import csv
 # Create a reinforcement learning agent
 # agent1 = RandomAgent(0)
 agent1 = MaxAgent(0)
-agent2 = MinAgent(1)
+agent2 = RandomAgent(1)
 players = [agent1, agent2]
 
 storage = precompute_possibilities()
@@ -20,7 +20,7 @@ storage = precompute_possibilities()
 env = HanamikojiEnvironment(agent1, agent2)
 
 # Training parameters
-num_episodes = 100000
+num_episodes = 10000
 
 percent, scores = [], []
 win, loss = 0, 0
@@ -72,8 +72,8 @@ with open('TrainingData/min_vs_random.csv', 'w', newline='') as csvfile:
     csv_writer.writerow(['Episode', 'Score', 'Win %'])
     
     # Write data rows
-    for episode, score, eps in zip(x, scores, percent):
-        csv_writer.writerow([episode, score, eps])
+    for episode, score, perc in zip(x, scores, percent):
+        csv_writer.writerow([episode, score, perc])
 
 # Plotting
 plot_single(x, scores, 'TrainingPlots/Diverse_Learn.png')

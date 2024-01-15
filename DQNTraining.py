@@ -50,8 +50,7 @@ for episode in range(1, num_episodes+1):
                 agent1.store_transition(stored_state, action, reward, state, done, False)
             stored_state = state
         
-        # TODO: move this into env
-        # Learn when the round ends
+        # State tells us when the round is finished
         if info['finished']:
             state = [0] * 40
             agent1.store_transition(stored_state, action, reward, state, done, True)

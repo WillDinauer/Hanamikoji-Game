@@ -17,6 +17,8 @@ class CleverAgent:
     def select_action(self, observation, possible_actions):
         # Choose an available action randomly, as long as it is diverse (if possible)
         resp = observation['board']['response_buffer']
+
+        # For a response to move 3, select the maximum card
         if len(resp) == 3:
             best_idx = -1
             maximum = 0
@@ -26,19 +28,24 @@ class CleverAgent:
                     maximum = resp[i]
             return possible_actions[best_idx]
 
+        # For a response to move 4, select the pile with the greater sum
         if len(resp) == 4:
             if resp[0] + resp[1] > resp[2] + resp[3]:
                 return possible_actions[0]
             else:
                 return possible_actions[1]
         
+        # Create an array of weights for the remaining possible actions left
         w = []
         for i in range(1, 5):
             if i in self.moves_left:
                 w.append(self.grid[4-len(self.moves_left)][i-1])
+
+        # Select an action length from these learned weights
         action_len = random.choices(self.moves_left, weights=tuple(w), k=1)[0]
         maximum = -1
         best_action = 0
+        # Select the maximum sum of the action with the selected length
         for action in possible_actions:
             if len(action) == action_len:
                 total = 0

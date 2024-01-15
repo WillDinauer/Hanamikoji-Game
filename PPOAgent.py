@@ -1,3 +1,12 @@
+"""
+PPOAgent.py
+
+Python class for a PPOAgent that plays Hanamikoji. The agent chooses actions using an actor and critic network.
+The actor and critic networks are deep neural networks consisting of three linear layers.
+
+William Dinauer, November 2023
+"""
+
 
 import torch as T
 import torch.nn as nn

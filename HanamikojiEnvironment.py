@@ -8,7 +8,10 @@ class HanamikojiEnvironment(gym.Env):
     def __init__(self, player1, player2):
         self.board = Board()
         self.players = [player1, player2]
+        # Seven geishas
         self.values = [2, 2, 2, 3, 3, 4, 5]
+        # A number of cards is added to the deck equal to the number on the geisha 
+        # (There are 4 cards for the geisha of value 4, 2 cards for each geisha of value 2, etc.)
         self.starting_deck = [0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6]
         self.deck = self.starting_deck.copy()
         self.current_player = None
@@ -48,19 +51,26 @@ class HanamikojiEnvironment(gym.Env):
 
     def handle_action(self, action, board):
         move = len(action)
+        # Each move is only used once each round
         self.current_player.moves_left.remove(move)
+        # Based on the action, update the state of the player or the board
         if move == 1:
+            # Card stored facedown
             self.current_player.facedown = self.current_player.hand.pop(action[0])
         elif move == 2:
+            # Cards discarded
             self.current_player.discard = self.get_buffer(action)
         elif move == 3:
+            # Waiting for a response...
             board.response = True
             board.response_buffer = self.get_buffer(action)
         elif move == 4:
+            # Waiting for a response...
             board.response = True
             board.response_buffer = self.get_buffer(action)
 
     def get_buffer(self, action):
+        # Play the cards from the player's hand, making sure to remove them from the hand array
         arr = []
         for idx in action:
             arr.append(self.current_player.hand[idx])
@@ -87,23 +97,28 @@ class HanamikojiEnvironment(gym.Env):
     def handle_response(self, action, board, opponent_side):
         my_cards = []
         opponent_cards = []
+        # Responding to move 3...select a single card of three
         if len(board.response_buffer) == 3:
             self.current_player.responses_left.remove(1)
             my_cards = [board.response_buffer.pop(action[0])]
             opponent_cards = board.response_buffer.copy()
+        # Responding to move 4...select a pair of cards
         else:
             self.current_player.responses_left.remove(2)
-            g1 = [board.response_buffer[0], board.response_buffer[1]]
-            g2 = [board.response_buffer[2], board.response_buffer[3]]
+            g1 = [board.response_buffer[0], board.response_buffer[1]]   # Group 1
+            g2 = [board.response_buffer[2], board.response_buffer[3]]   # Group 2
             if action[0] == 0:
                 my_cards = g1
                 opponent_cards = g2
             else:
                 my_cards = g2
                 opponent_cards = g1
+
+        # We are no longer waiting for a response...reset the waiting condition and buffer
         board.response_buffer = []
         board.response = False
 
+        # Place cards on the board according to the choices
         arr = []
         for card in my_cards:
             arr.append([self.current_player.side, card])

@@ -1,3 +1,11 @@
+"""
+DQNAgent.py
+
+Python class for a DQNAgent that plays Hanamikoji. The agent chooses actions using Deep Q-Learning.
+The DQN is a deep neural network with 5 linear layers: an input layer, 3 hidden layers, and an output layer.
+
+William Dinauer, November 2023
+"""
 
 import torch as T
 import torch.nn as nn
@@ -86,10 +94,7 @@ class DQNAgent:
         moves = moves[:max_moves_size] + [0] * (max_moves_size - len(moves))
         opponent_moves = opponent_moves[:max_moves_size] + [0] * (max_moves_size - len(opponent_moves))
 
-        # print(f"{len(hand)}{len(moves)}{len(facedown)}{len(discard)}{len(observation['board']['player1_side'])}{len(observation['board']['player2_side'])}{len(observation['board']['favor'])}{len(opponent_moves)}{len([observation['opponent']['hand_size']])}")
-        # print(f"{type(hand)}{type(moves)}{type(facedown)}{type(discard)}{type(observation['board']['player1_side'])}{type(observation['board']['player2_side'])}{type(observation['board']['favor'])}{type(opponent_moves)}{type([observation['opponent']['hand_size']])}")
-        
-        # 7 + 4 + 1 + 2 + 7 + 7 + 7 + 4 + 1 = 40 parameter
+        # 7 + 4 + 1 + 2 + 7 + 7 + 7 + 4 + 1 = 40 parameters
         observation_values = hand + moves + [facedown] + discard \
             + observation['board']['player1_side'] + observation['board']['player2_side'] + observation['board']['favor'] \
             + opponent_moves + [observation['opponent']['hand_size']]
@@ -137,6 +142,7 @@ class DQNAgent:
         self.mem_cntr += 1
     
     def convert_action(self, action):
+        # Convert the action into acceptable input for the DQN
         if type(action) == list:
             if len(action) == 1:
                 action = action[0]
@@ -146,7 +152,9 @@ class DQNAgent:
         return self.action_dict[action]
 
     def update_rewards(self, reward):
-        for i in range(6):
+        # This is a common AI problem: assignment of reward to past actions
+        # Here, the reward is evenly split among all past actions for the batch size
+        for i in range(self.batch_size):
             index = (self.mem_cntr-i-1) % self.mem_size
             self.reward_memory[index] = reward
     

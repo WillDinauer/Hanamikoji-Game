@@ -24,7 +24,8 @@ class Board:
                 self.player1_side[pair[1]] += 1
             else:
                 self.player2_side[pair[1]] += 1
-
+    
+    # Public information, available to both sides. These are the face up cards on the table, and where the favor with each Geisha lies
     def get_state(self):
         return {
             "player1_side": self.player1_side,
@@ -45,11 +46,11 @@ class Board:
         self.resetFavor()
 
     def whos_winning(self, idx):
-        # Player 1 is winning this favor
+        # Player 1 is ahead for this geisha
         if self.player1_side[idx] > self.player2_side[idx]:
             self.favor[idx] = 1
             return 1
-        # Player 2 is winning this favor
+        # Player 2 is ahead for this geisha
         elif self.player2_side[idx] > self.player1_side[idx]:
             self.favor[idx] = -1
             return -1

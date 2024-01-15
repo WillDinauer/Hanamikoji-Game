@@ -7,7 +7,6 @@ The actor and critic networks are deep neural networks consisting of three linea
 William Dinauer, November 2023
 """
 
-
 import torch as T
 import torch.nn as nn
 import torch.nn.functional as F

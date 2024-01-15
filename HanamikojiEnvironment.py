@@ -1,3 +1,13 @@
+"""
+HanamikojiEnvironment.py
+
+Python class setting up the Hanamikoji game as an OpenAI Gym Environment. This allows for AI agents to train on the game.
+The goal of the game is to win the favor of four of the seven geishas, or to reach 11 points. 
+The full rulebook can be found here: https://cdn.1j1ju.com/medias/e0/90/0c-hanamikoji-rulebook.pdf
+
+William Dinauer, November 2023
+"""
+
 import random
 from Board import Board
 import gym

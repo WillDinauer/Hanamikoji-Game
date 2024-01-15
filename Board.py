@@ -1,3 +1,13 @@
+"""
+Board.py
+
+The Board class keeps track of all the state regarding the board. This is all publicly known information to both players,
+including the cards on either side, the state of the geishas' favor, and the current choice being presented to an opponent.
+
+William Dinauer, November 2023
+"""
+
+
 from termcolor import colored
 
 # Publicly displayed cards on the board

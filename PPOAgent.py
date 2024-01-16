@@ -172,9 +172,6 @@ class PPOAgent:
         hand = hand[:max_hand_size] + [0] * (max_hand_size - len(hand))
         moves = moves[:max_moves_size] + [0] * (max_moves_size - len(moves))
         opponent_moves = opponent_moves[:max_moves_size] + [0] * (max_moves_size - len(opponent_moves))
-
-        # print(f"{len(hand)}{len(moves)}{len(facedown)}{len(discard)}{len(observation['board']['player1_side'])}{len(observation['board']['player2_side'])}{len(observation['board']['favor'])}{len(opponent_moves)}{len([observation['opponent']['hand_size']])}")
-        # print(f"{type(hand)}{type(moves)}{type(facedown)}{type(discard)}{type(observation['board']['player1_side'])}{type(observation['board']['player2_side'])}{type(observation['board']['favor'])}{type(opponent_moves)}{type([observation['opponent']['hand_size']])}")
         
         # 7 + 4 + 1 + 2 + 7 + 7 + 7 + 4 + 1 = 40 parameter
         observation_values = hand + moves + [facedown] + discard \

@@ -11,8 +11,6 @@ William Dinauer, November 2023
 import random
 from Board import Board
 import gym
-from gym import logger, spaces
-import numpy as np
 
 class HanamikojiEnvironment(gym.Env):
     def __init__(self, player1, player2):

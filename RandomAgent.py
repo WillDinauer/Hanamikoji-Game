@@ -1,3 +1,11 @@
+"""
+RanomAgent.py
+
+Agent for playing Hanamikoji that takes actions completely at random.
+
+William Dinauer, November 2023
+"""
+
 import random
 
 class RandomAgent:
